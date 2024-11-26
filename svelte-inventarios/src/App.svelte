@@ -12,6 +12,7 @@
 
 <nav class="navbar navbar-expand-lg navbar-light bg-light shadow-sm">
     <div class="container-fluid">
+        <!-- svelte-ignore a11y-invalid-attribute -->
         <a class="navbar-brand" href="#" on:click={() => navigate('/productos')}>Gestión Empresarial</a>
         <button
             class="navbar-toggler"

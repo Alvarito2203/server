@@ -25,51 +25,43 @@
 
     // Añadir producto al pedido
     const agregarProducto = (producto_id, cantidad) => {
-        const producto = productos.find(p => p.id === producto_id);
-        if (!producto) return;
+    const producto = productos.find((p) => p.id === producto_id);
+    if (!producto) return;
 
-        const subtotal = producto.precio * cantidad;
-        pedido.detalles.push({ producto_id, cantidad, subtotal });
-        calcularTotal();
-    };
+    const subtotal = producto.precio * cantidad;
+    pedido.detalles.push({ producto_id, cantidad, subtotal });
+    calcularTotal();
+};
 
     // Eliminar producto del pedido
     const eliminarProducto = (index) => {
-        pedido.detalles.splice(index, 1);
-        calcularTotal();
-    };
+    pedido.detalles.splice(index, 1);
+    calcularTotal();
+};
 
     // Calcular total del pedido
     const calcularTotal = () => {
-        total = pedido.detalles.reduce((sum, item) => sum + item.subtotal, 0);
-    };
+    total = pedido.detalles.reduce((sum, item) => sum + item.subtotal, 0);
+};
 
     // Registrar pedido
     const registrarPedido = async () => {
-        if (!pedido.cliente_id || pedido.detalles.length === 0) {
-            alert("Seleccione un cliente y agregue productos al pedido.");
-            return;
-        }
+    if (!pedido.cliente_id || pedido.detalles.length === 0) {
+        alert("Seleccione un cliente y agregue productos al pedido.");
+        return;
+    }
 
-        await fetch("http://localhost:3000/pedidos", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(pedido)
-        });
-
-        alert("Pedido registrado exitosamente.");
-        limpiarFormulario();
-    };
-
-    const limpiarFormulario = () => {
-        pedido = { cliente_id: null, detalles: [] };
-        total = 0;
-    };
-
-    onMount(() => {
-        fetchClientes();
-        fetchProductos();
+    await fetch("http://localhost:3000/pedidos", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(pedido),
     });
+
+    alert("Pedido registrado exitosamente.");
+    limpiarFormulario();
+    fetchProductos(); // Actualiza el stock en la interfaz
+};
+
 </script>
 
 <main class="container mt-5">
@@ -77,6 +69,7 @@
 
     <!-- Selección de cliente -->
     <div class="mb-4">
+        <!-- svelte-ignore a11y-label-has-associated-control -->
         <label class="form-label">Seleccionar Cliente</label>
         <select bind:value={pedido.cliente_id} class="form-select" required>
             <option value="" disabled selected>Seleccione un cliente</option>

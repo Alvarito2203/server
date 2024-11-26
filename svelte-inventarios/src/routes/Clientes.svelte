@@ -14,33 +14,44 @@
 
     // Crear cliente
     const agregarCliente = async () => {
-        await fetch("http://localhost:3000/clientes", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ nombre, email }),
-        });
-        fetchClientes();
-        limpiarFormulario();
-    };
+    if (!nombre || !email) {
+        alert("Por favor, completa todos los campos.");
+        return;
+    }
+    await fetch("http://localhost:3000/clientes", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ nombre, email }),
+    });
+    fetchClientes(); // Recargar clientes después de agregar
+    limpiarFormulario();
+};
+
 
     // Actualizar cliente
     const actualizarCliente = async () => {
-        await fetch(`http://localhost:3000/clientes/${editId}`, {
-            method: "PUT",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ nombre, email }),
-        });
-        fetchClientes();
-        limpiarFormulario();
-    };
+    if (!nombre || !email) {
+        alert("Por favor, completa todos los campos.");
+        return;
+    }
+    await fetch(`http://localhost:3000/clientes/${editId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ nombre, email }),
+    });
+    fetchClientes(); // Recargar clientes después de actualizar
+    limpiarFormulario();
+};
 
     // Eliminar cliente
     const eliminarCliente = async (id) => {
+    if (confirm("¿Estás seguro de que deseas eliminar este cliente?")) {
         await fetch(`http://localhost:3000/clientes/${id}`, {
             method: "DELETE",
         });
-        fetchClientes();
-    };
+        fetchClientes(); // Recargar clientes después de eliminar
+    }
+};
 
     // Seleccionar cliente para editar
     const seleccionarCliente = (cliente) => {
