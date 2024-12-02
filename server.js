@@ -87,8 +87,12 @@ app.delete('/productos/:id', (req, res) => {
 // *** CRUD para Clientes ***
 app.get('/clientes', (req, res) => {
     db.query('SELECT * FROM clientes', (err, results) => {
-        if (err) res.status(500).send(err.message);
-        else res.json(results);
+        if (err) {
+            console.error('Error al obtener clientes:', err.message);
+            res.status(500).send('Error al obtener clientes');
+        } else {
+            res.json(results);
+        }
     });
 });
 
@@ -141,29 +145,47 @@ app.get('/pedidos', (req, res) => {
 app.post('/pedidos', (req, res) => {
     const { cliente_id, detalles } = req.body;
 
-    let total = detalles.reduce((sum, item) => sum + item.subtotal, 0);
+    if (!cliente_id || !detalles || detalles.length === 0) {
+        res.status(400).send('El pedido debe incluir un cliente y al menos un producto.');
+        return;
+    }
 
-    db.query(
-        'INSERT INTO pedidos (cliente_id, total) VALUES (?, ?)',
-        [cliente_id, total],
-        (err, result) => {
-            if (err) return res.status(500).send(err.message);
+    db.beginTransaction((err) => {
+        if (err) return res.status(500).send('Error al iniciar transacción');
 
-            const pedido_id = result.insertId;
-            detalles.forEach(item => {
-                db.query(
-                    'INSERT INTO pedido_detalles (pedido_id, producto_id, cantidad, subtotal) VALUES (?, ?, ?, ?)',
-                    [pedido_id, item.producto_id, item.cantidad, item.subtotal]
-                );
-                db.query(
-                    'UPDATE productos SET stock = stock - ? WHERE id = ?',
-                    [item.cantidad, item.producto_id]
-                );
+        const pedidoSQL = 'INSERT INTO pedidos (cliente_id, total) VALUES (?, ?)';
+        const total = detalles.reduce((sum, item) => sum + item.subtotal, 0);
+
+        db.query(pedidoSQL, [cliente_id, total], (err, result) => {
+            if (err) {
+                return db.rollback(() => res.status(500).send('Error al crear pedido'));
+            }
+
+            const pedidoId = result.insertId;
+            const detallesSQL = 'INSERT INTO detalles_pedido (pedido_id, producto_id, cantidad, subtotal) VALUES ?';
+
+            const valores = detalles.map((item) => [
+                pedidoId,
+                item.producto_id,
+                item.cantidad,
+                item.subtotal,
+            ]);
+
+            db.query(detallesSQL, [valores], (err) => {
+                if (err) {
+                    return db.rollback(() => res.status(500).send('Error al insertar detalles del pedido'));
+                }
+
+                db.commit((err) => {
+                    if (err) {
+                        return db.rollback(() => res.status(500).send('Error al confirmar pedido'));
+                    }
+
+                    res.send('Pedido registrado exitosamente');
+                });
             });
-
-            res.status(201).json({ message: 'Pedido registrado' });
-        }
-    );
+        });
+    });
 });
 
 // Generación de informes en PDF
