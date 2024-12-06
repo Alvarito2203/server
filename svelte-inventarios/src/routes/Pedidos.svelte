@@ -23,14 +23,40 @@
 
     // Agregar producto al pedido
     const agregarProducto = (producto_id, cantidad) => {
-        const producto = productos.find((p) => p.id === producto_id);
-        if (!producto || cantidad <= 0) return;
+    const producto = productos.find((p) => p.id === producto_id);
+    if (!producto || cantidad <= 0) {
+        alert("Seleccione un producto válido y una cantidad mayor a cero.");
+        return;
+    }
 
-        const subtotal = producto.precio * cantidad;
-        pedido.detalles.push({ producto_id, cantidad, subtotal, nombre: producto.nombre });
-        calcularTotal();
-        limpiarProducto();
-    };
+    const subtotal = producto.precio * cantidad;
+
+    // Verificar si el producto ya existe en el pedido
+    const existente = pedido.detalles.find((item) => item.producto_id === producto_id);
+    if (existente) {
+        // Si existe, actualizamos la cantidad y el subtotal
+        existente.cantidad += cantidad;
+        existente.subtotal += subtotal;
+    } else {
+        // Si no existe, lo añadimos al array
+        pedido.detalles = [
+            ...pedido.detalles,
+            {
+                producto_id,
+                nombre: producto.nombre,
+                cantidad,
+                subtotal,
+            },
+        ];
+    }
+
+    // Forzar actualización del array y recalcular el total
+    pedido.detalles = [...pedido.detalles];
+    calcularTotal();
+    limpiarProducto();
+};
+
+
 
     // Eliminar producto del pedido
     const eliminarProducto = (index) => {
@@ -40,27 +66,31 @@
 
     // Calcular el total del pedido
     const calcularTotal = () => {
-        total = pedido.detalles.reduce((sum, item) => sum + item.subtotal, 0);
-    };
+    total = pedido.detalles.reduce((sum, item) => sum + item.subtotal, 0);
+};
 
     // Registrar el pedido
     const registrarPedido = async () => {
-        if (!pedido.cliente_id || pedido.detalles.length === 0) {
-            alert("Seleccione un cliente y agregue productos al pedido.");
-            return;
-        }
+    if (!pedido.cliente_id || pedido.detalles.length === 0) {
+        alert("Seleccione un cliente y agregue productos al pedido.");
+        return;
+    }
 
-        await fetch("http://localhost:3000/pedidos", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(pedido),
-        });
+    const response = await fetch("http://localhost:3000/pedidos", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(pedido),
+    });
 
+    if (response.ok) {
         alert("Pedido registrado exitosamente.");
         pedido = { cliente_id: null, detalles: [] };
         total = 0;
-        limpiarProducto();
-    };
+    } else {
+        alert("Error al registrar el pedido.");
+    }
+};
+
 
     // Limpiar selección de producto
     const limpiarProducto = () => {
@@ -150,33 +180,35 @@
                 </div>
                 <div class="card-body p-0">
                     {#if pedido.detalles.length > 0}
-                        <table class="table table-striped table-hover m-0">
-                            <thead class="table-light">
+                    <table class="table table-striped table-hover m-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Producto</th>
+                                <th>Cantidad</th>
+                                <th>Subtotal</th>
+                                <th class="text-center">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {#each pedido.detalles as detalle, index}
                                 <tr>
-                                    <th>Producto</th>
-                                    <th>Cantidad</th>
-                                    <th>Subtotal</th>
-                                    <th class="text-center">Acciones</th>
+                                    <td>{detalle.nombre}</td>
+                                    <td>{detalle.cantidad}</td>
+                                    <td>${detalle.subtotal.toFixed(2)}</td>
+                                    <td class="text-center">
+                                        <button
+                                            class="btn btn-danger btn-sm"
+                                            on:click={() => eliminarProducto(index)}
+                                        >
+                                            Eliminar
+                                        </button>
+                                    </td>
                                 </tr>
-                            </thead>
-                            <tbody>
-                                {#each pedido.detalles as detalle, index}
-                                    <tr>
-                                        <td>{detalle.nombre}</td>
-                                        <td>{detalle.cantidad}</td>
-                                        <td>${detalle.subtotal}</td>
-                                        <td class="text-center">
-                                            <button
-                                                class="btn btn-danger btn-sm"
-                                                on:click={() => eliminarProducto(index)}
-                                            >
-                                                Eliminar
-                                            </button>
-                                        </td>
-                                    </tr>
-                                {/each}
-                            </tbody>
-                        </table>
+                            {/each}
+                        </tbody>
+                    </table>
+                    
+                    
                     {:else}
                         <p class="text-center p-3 mb-0">No hay productos en el pedido.</p>
                     {/if}

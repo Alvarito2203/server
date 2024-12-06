@@ -13,45 +13,56 @@
         productos = await res.json();
     };
 
-    // Agregar producto
     const agregarProducto = async () => {
-        if (!nombre || !precio || !stock) {
-            alert("Por favor, completa todos los campos.");
-            return;
-        }
-        await fetch("http://localhost:3000/productos", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ nombre, precio, stock }),
-        });
-        fetchProductos(); // Actualiza la lista de productos
-        limpiarFormulario();
-    };
+    if (!nombre || precio < 0 || stock < 0) {
+        alert("Por favor, ingrese valores válidos. El precio y el stock no pueden ser negativos.");
+        return;
+    }
 
-    // Actualizar producto
-    const actualizarProducto = async () => {
-        if (!nombre || !precio || !stock) {
-            alert("Por favor, completa todos los campos.");
-            return;
-        }
-        await fetch(`http://localhost:3000/productos/${editId}`, {
-            method: "PUT",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ nombre, precio, stock }),
-        });
-        fetchProductos(); // Actualiza la lista de productos
-        limpiarFormulario();
-    };
+    await fetch("http://localhost:3000/productos", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ nombre, precio, stock }),
+    });
+
+    fetchProductos(); // Actualiza la lista de productos
+    limpiarFormulario();
+};
+
+const actualizarProducto = async () => {
+    if (!nombre || precio < 0 || stock < 0) {
+        alert("Por favor, ingrese valores válidos. El precio y el stock no pueden ser negativos.");
+        return;
+    }
+
+    await fetch(`http://localhost:3000/productos/${editId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ nombre, precio, stock }),
+    });
+
+    fetchProductos(); // Actualiza la lista de productos
+    limpiarFormulario();
+};
+
 
     // Eliminar producto
     const eliminarProducto = async (id) => {
-        if (confirm("¿Estás seguro de que deseas eliminar este producto?")) {
-            await fetch(`http://localhost:3000/productos/${id}`, {
-                method: "DELETE",
-            });
+    if (confirm("¿Estás seguro de que deseas eliminar este producto?")) {
+        const res = await fetch(`http://localhost:3000/productos/${id}`, {
+            method: "DELETE",
+        });
+
+        if (res.ok) {
+            alert("Producto eliminado correctamente.");
             fetchProductos(); // Actualiza la lista de productos
+        } else {
+            alert("Error al eliminar el producto. Asegúrate de que no esté relacionado con pedidos.");
         }
-    };
+    }
+};
+
+
 
     // Seleccionar producto para edición
     const seleccionarProducto = (producto) => {

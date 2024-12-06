@@ -42,15 +42,22 @@
         limpiarFormulario();
     };
 
-    // Eliminar cliente
-    const eliminarCliente = async (id) => {
-        if (confirm("¿Estás seguro de que deseas eliminar este cliente?")) {
-            await fetch(`http://localhost:3000/clientes/${id}`, {
-                method: "DELETE",
-            });
+       // Eliminar cliente
+       const eliminarCliente = async (id) => {
+    if (confirm("¿Estás seguro de que deseas eliminar este cliente?")) {
+        const res = await fetch(`http://localhost:3000/clientes/${id}`, {
+            method: "DELETE",
+        });
+
+        if (res.ok) {
+            alert("Cliente eliminado correctamente.");
             fetchClientes(); // Actualiza la lista de clientes
+        } else {
+            alert("Error al eliminar el cliente. Asegúrate de que no esté relacionado con pedidos.");
         }
-    };
+    }
+};
+
 
     // Seleccionar cliente para edición
     const seleccionarCliente = (cliente) => {
